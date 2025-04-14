@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class StartApp {
     public static void main(String[] args) {
+        System.setProperty("jasypt.encryptor.password", "8FPeEHKNCzRt3UX4Yrdn");
         SpringApplication.run(StartApp.class, args);
     }
 }

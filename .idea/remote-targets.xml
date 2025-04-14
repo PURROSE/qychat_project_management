@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="root@www.purplerosechen.com:22" type="ssh/sftp" uuid="c0f970b6-ad2b-4184-8ef7-41dec119fdfd">
+        <config>
+          <option name="projectRootOnTarget" value="/root/qychat_project_management" />
+          <option name="serverName" value="root@www.purplerosechen.com:22 password" />
+        </config>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/www/server/java/jdk-21.0.2" />
+            <option name="javaVersionString" value="21" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>

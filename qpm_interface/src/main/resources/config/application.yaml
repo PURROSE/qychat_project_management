@@ -1,10 +1,21 @@
 server:
-  port: 443
+  port: 8443
+#  ssl:
+#    enabled: true
+#    key-store: classpath:config/keystore.p12
+#    key-store-password: 1234560
+#    keyStoreType: PKCS12
+#    keyAlias: qpm
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:54329/qpm
+    url: jdbc:postgresql://www.purplerosechen.com:54329/qpm
     username: qpm
-    password: MAC0385mac
+    password: MAC0385macCwj
   profiles:
     active: dev
+bot:
+  app-id: 102620972
+  number: 3889528922
+  token: Cm1A88f1OPEmwB7HBfMbbHmUpeCCTCsL
+  secret: fs5JXlzDRfu9Ods7Mbr7Ndt9PgxEVm3K
