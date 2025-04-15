@@ -15,5 +15,11 @@ public class ParentCallBackDto {
     @JSONField(name = "d")
     private JSONObject d;
     @JSONField(name = "op")
-    private String op;
+    private Integer op;
+    @JSONField(name = "s")
+    private String s;
+    @JSONField(name = "id")
+    private String id;
+    @JSONField(name = "t")
+    private String t;
 }

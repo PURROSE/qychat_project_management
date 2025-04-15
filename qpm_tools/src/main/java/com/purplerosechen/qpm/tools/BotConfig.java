@@ -26,4 +26,8 @@ public class BotConfig {
     private String token;
     @Value("${bot.number}")
     private String number;
+    @Value("${bot.sx-url}")
+    private String sxUrl;
+    @Value("${bot.zs-url}")
+    private String zssUrl;
 }

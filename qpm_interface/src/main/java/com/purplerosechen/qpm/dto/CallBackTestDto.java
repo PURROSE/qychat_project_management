@@ -9,8 +9,8 @@ import lombok.Data;
  * @description: TODO 回调测试数据
  * @date 14 4月 2025 14:57
  */
-@Data
-public class CallBackTestDto {
+@Data()
+public class CallBackTestDto extends AllCallBackDto{
     @JSONField(name = "plain_token")
     private String plainToken;
     @JSONField(name = "event_ts")

@@ -19,3 +19,5 @@ bot:
   number: 3889528922
   token: Cm1A88f1OPEmwB7HBfMbbHmUpeCCTCsL
   secret: fs5JXlzDRfu9Ods7Mbr7Ndt9PgxEVm3K
+  sx-url: https://sandbox.api.sgroup.qq.com
+  zs-url: https://api.sgroup.qq.com/

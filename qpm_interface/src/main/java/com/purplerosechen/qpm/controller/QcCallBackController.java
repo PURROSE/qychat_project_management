@@ -1,7 +1,7 @@
 package com.purplerosechen.qpm.controller;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.purplerosechen.qpm.dto.CallBackTestDto;
+import com.purplerosechen.qpm.config.CallBackApiConfig;
 import com.purplerosechen.qpm.dto.ParentCallBackDto;
 import com.purplerosechen.qpm.tools.BotConfig;
 import com.purplerosechen.qpm.tools.enc.CallBackSignUtil;
@@ -28,7 +28,8 @@ public class QcCallBackController {
 
     @Resource
     private BotConfig botConfig;
-
+    @Resource
+    private CallBackApiConfig callbackApiConfig;
 
     @RequestMapping("/test")
     public Mono<Object> testCallBack(
@@ -38,35 +39,24 @@ public class QcCallBackController {
             ServerWebExchange serverWebExchange
             ) throws Exception {
 
-        log.info("xSignatureEd25519:{}", xSignatureEd25519);
-        log.info("xSignatureTimestamp:{}", xSignatureTimestamp);
-        log.info("reqBody:{}", reqBody);
+        log.info("xSignatureEd25519:{};xSignatureTimestamp:{};reqBody:{}", xSignatureEd25519, xSignatureTimestamp, reqBody);
 
-//        if (!CallBackSignUtil.verifySignature(
-//                botConfig.getAppSecret(),
-//                xSignatureEd25519,
-//                xSignatureTimestamp + reqBody
-//        )) {
-//            throw new RuntimeException("签名验证失败");
-//        }
+        if (!CallBackSignUtil.verifySignature(
+                botConfig.getAppSecret(),
+                xSignatureEd25519,
+                xSignatureTimestamp,
+                reqBody
+        )) {
+            throw new RuntimeException("签名验证失败");
+        }
 
         ParentCallBackDto parentCallBackDto = JSONObject.parseObject(reqBody, ParentCallBackDto.class);
-        CallBackTestDto callBackTestDto = parentCallBackDto.getD().to(CallBackTestDto.class);
-        log.info("callBackTestDto:{}", callBackTestDto);
-        JSONObject jsonResponse = new JSONObject();
-        jsonResponse.put("plain_token", callBackTestDto.getPlainToken());
-        jsonResponse.put(
-                "signature",
-                CallBackSignUtil.generateResponse(
-                        botConfig.getAppSecret(),
-                        callBackTestDto.getEventTs(),
-                        callBackTestDto.getPlainToken()
-                )
-        );
+
+        Object result = callbackApiConfig.execute(parentCallBackDto);
 
         serverWebExchange.getResponse().getHeaders().add("X-Bot-Appid", botConfig.getAppId());
         serverWebExchange.getResponse().getHeaders().add("User-Agent", "QQBot-Callback");
 
-        return Mono.just(jsonResponse);
+        return Mono.just(result);
     }
 }

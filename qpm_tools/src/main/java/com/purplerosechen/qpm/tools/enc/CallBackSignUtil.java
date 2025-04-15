@@ -1,12 +1,23 @@
 package com.purplerosechen.qpm.tools.enc;
 
-import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Hex;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator;
+import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters;
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
+import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Hex;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.util.Arrays;
+import java.util.Random;
 
 /**
  * @author chen
@@ -18,83 +29,99 @@ import java.security.*;
 @Slf4j
 public class CallBackSignUtil {
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+    private static final int ED25519_SEED_SIZE = 32;
 
-    public static boolean verifySignature(String botSecret, String xSignatureEd25519, String timeReqBody) throws Exception {
-        String seed = generateSeed(botSecret);
-        byte[] sig = Hex.decodeHex(xSignatureEd25519);
+    /** 
+     * @description: TODO 验证签名是否对应 
+     * @author chen
+     * @date: 15 4月 2025 14:03
+     */ 
+    public static boolean verifySignature(String appSecret, String xSignatureEd25519, String xSignatureTimestamp, String reqBody) throws IOException {
+        byte[] seed = expandSeed(appSecret.getBytes(StandardCharsets.UTF_8));
 
-        if (sig.length != 64) {
+        // 用 seed 构造 Ed25519 私钥
+        Ed25519PrivateKeyParameters privateKey = new Ed25519PrivateKeyParameters(seed, 0);
+
+        // 从私钥推导出公钥
+        Ed25519PublicKeyParameters publicKey = privateKey.generatePublicKey();
+        byte[] signature = hexStringToByteArray(xSignatureEd25519);
+
+        if (signature.length != 64 || (signature[63] & 0xE0) != 0) {
             return false;
         }
-        // 校验签名的最后一位是否符合特定的位掩码条件
-        if ((sig[63] & 0xE0) != 0) {
-            return false;
-        }
 
-        log.warn("seed:{}" , seed);
+        ByteArrayOutputStream msg = new ByteArrayOutputStream();
+        msg.write(xSignatureTimestamp.getBytes());
+        msg.write(reqBody.getBytes());
+        byte[] msgBytes = msg.toByteArray();
 
-        Signature signature = Signature.getInstance("Ed25519", "BC");
-        signature.initVerify(generateEd25519KeyPair(seed.getBytes()).getPublic());
-        signature.update(timeReqBody.getBytes(StandardCharsets.UTF_8));
-        return signature.verify(sig);
+        Ed25519Signer signer = new Ed25519Signer();
+        signer.init(false, publicKey);
+        signer.update(msgBytes, 0, msgBytes.length);
+        return signer.verifySignature(signature);
     }
 
+    /**
+     * @description: TODO  生成秘钥
+     * @author chen
+     * @date: 15 4月 2025 13:50
+     */
     public static String generateResponse(String botSecret, String eventTs, String plainToken) throws Exception {
-        // 生成seed
-        String seed = generateSeed(botSecret);
+        byte[] seed = expandSeed(botSecret.getBytes(StandardCharsets.UTF_8));
+        Ed25519PrivateKeyParameters privateKey = new Ed25519PrivateKeyParameters(seed, 0);
 
         // 生成Ed25519密钥对
-        KeyPair keyPair = generateEd25519KeyPair(seed.getBytes());
+        ByteArrayOutputStream msg = new ByteArrayOutputStream();
+        msg.write(eventTs.getBytes());
+        msg.write(plainToken.getBytes());
+        byte[] msgBytes = msg.toByteArray();
 
-        // 组合消息
-        byte[] msg = (eventTs + plainToken).getBytes();
+        Ed25519Signer signer = new Ed25519Signer();
+        signer.init(true, privateKey);
+        signer.update(msgBytes, 0, msgBytes.length);
+        byte[] signature = signer.generateSignature();
 
-        // 生成签名
-        byte[] signature = signEd25519(keyPair.getPrivate(), msg);
-
-        return Hex.encodeHexString(signature);
+        return bytesToHex(signature);
     }
 
     /** 
-     * @description: TODO 生成秘钥字符串 
+     * @description: TODO 字节转换
      * @author chen
-     * @date: 14 4月 2025 15:35
+     * @date: 15 4月 2025 13:49
      */ 
-    private static String generateSeed(String botSecret) {
-        StringBuilder seedBuilder = new StringBuilder(botSecret);
-        // 重复 Bot Secret 直到达到或超过 32 字节
-        while (seedBuilder.length() < 32) {
-            seedBuilder.append(seedBuilder);
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
         }
-        // 如果超过 32 字节，截取前 32 字节
-        return seedBuilder.substring(0, 32);
+        return result.toString();
     }
 
-    /** 
-     * @description: TODO 生成秘钥对 
+    /**
+     * @description: TODO 秘钥补齐
      * @author chen
-     * @date: 14 4月 2025 15:35
-     */ 
-    private static KeyPair generateEd25519KeyPair(byte[] seed) throws Exception {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("Ed25519", "BC");
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.setSeed(seed);
-        keyPairGenerator.initialize(255, secureRandom);
-        return keyPairGenerator.generateKeyPair();
+     * @date: 15 4月 2025 13:50
+     */
+    private static byte[] expandSeed(byte[] input) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        while (output.size() < ED25519_SEED_SIZE) {
+            output.writeBytes(input);
+        }
+        return Arrays.copyOf(output.toByteArray(), ED25519_SEED_SIZE);
     }
 
-    /** 
-     * @description: TODO 生成签名 
-     * @author chen
-     * @date: 14 4月 2025 15:35
-     */ 
-    private static byte[] signEd25519(PrivateKey privateKey, byte[] msg) throws Exception {
-        Signature signature = Signature.getInstance("Ed25519", "BC");
-        signature.initSign(privateKey);
-        signature.update(msg);
-        return signature.sign();
+    private static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        if ((len & 1) != 0) {
+            throw new IllegalArgumentException("Hex string must have even length");
+        }
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) (
+                    (Character.digit(s.charAt(i), 16) << 4)
+                            + Character.digit(s.charAt(i + 1), 16)
+            );
+        }
+        return data;
     }
 }
