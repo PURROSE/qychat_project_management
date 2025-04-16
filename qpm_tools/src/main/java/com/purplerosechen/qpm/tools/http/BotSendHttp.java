@@ -7,8 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -48,7 +52,7 @@ public class BotSendHttp {
         at.put("appId",botConfig.getAppId());
         at.put("clientSecret",botConfig.getAppSecret());
         Mono<String> res = webClient.post()
-                .uri("https://bots.qq.com/app/getAppAccessToken")
+                .uri(ApiHttpUrlEnum.GET_ACC_TOKENS.getUrl())
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(at)
                 .retrieve()
@@ -58,28 +62,42 @@ public class BotSendHttp {
         res.subscribe(
                 s -> {
                     log.info("获取accessToken成功:{}", s);
-                    JSONObject jsonObject = JSONObject.parseObject(s);
-                    accessToken = jsonObject.getString("access_token");
-                    expireTime = jsonObject.getLong("expires_in") + System.currentTimeMillis();
-                    success.set(true);
+
                 },
                 e -> {
                     log.error("获取accessToken失败:{}", e.getMessage());
                 }
         );
-        res.block();
+
+        JSONObject jsonObject = JSONObject.parseObject(res.block());
+        if (jsonObject != null && jsonObject.getString("access_token") != null && jsonObject.getLong("expires_in") != null) {
+            accessToken = jsonObject.getString("access_token");
+            expireTime = (jsonObject.getLong("expires_in") * 1000) + System.currentTimeMillis();
+            success.set(true);
+        }
         return success.get();
     }
 
     private boolean updateAccessToken() throws Exception {
         synchronized (this) {
             if (System.currentTimeMillis() >= expireTime) {
-                if (inputAccTokens()) {
-                    return true;
-                }
-                return false;
+                return inputAccTokens();
             }
-            return false;
+            return true;
         }
+    }
+
+    public Mono<String> otherGet(HashMap<String,Object> body, String url) {
+        UriComponentsBuilder uriBuilder =  UriComponentsBuilder.fromHttpUrl(url);
+        for ( String key : body.keySet() ) {
+            uriBuilder.queryParam(key, body.get(key));
+        }
+        UriComponents uri = uriBuilder.build();
+
+        return webClient.get()
+                .uri(uri.toUriString())
+                .retrieve()
+                .bodyToMono(String.class)
+                ;
     }
 }

@@ -1,8 +1,7 @@
-package com.purplerosechen.qpm.pojo;
+package com.purplerosechen.qpm.pojo.qq;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author chen

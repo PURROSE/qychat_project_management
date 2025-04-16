@@ -1,8 +1,9 @@
-package com.purplerosechen.qpm.service;
+package com.purplerosechen.qpm.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.purplerosechen.qpm.dto.AllCallBackDto;
 import com.purplerosechen.qpm.dto.CallBackTestDto;
+import com.purplerosechen.qpm.service.CallBackService;
 import com.purplerosechen.qpm.tools.BotConfig;
 import com.purplerosechen.qpm.tools.enc.CallBackSignUtil;
 import jakarta.annotation.Resource;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class TestCallBackServiceImpl implements CallBackService{
+public class TestCallBackServiceImpl implements CallBackService {
 
     @Resource
     private BotConfig botConfig;

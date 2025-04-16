@@ -14,6 +14,10 @@ spring:
     password: MAC0385macCwj
   profiles:
     active: dev
+logging:
+  level:
+    org.springframework.web.reactive.function.client: DEBUG
+    com.purplerosechen.qpm: DEBUG
 bot:
   app-id: 102620972
   number: 3889528922
@@ -21,3 +25,4 @@ bot:
   secret: fs5JXlzDRfu9Ods7Mbr7Ndt9PgxEVm3K
   sx-url: https://sandbox.api.sgroup.qq.com
   zs-url: https://api.sgroup.qq.com/
+  gd-key: b3ae989707c1a1ad037bf26360ef1dfc

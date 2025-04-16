@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.Executor;
+
 /**
  * @author chen
  * @version 1.0
@@ -30,6 +32,8 @@ public class QcCallBackController {
     private BotConfig botConfig;
     @Resource
     private CallBackApiConfig callbackApiConfig;
+    @Resource
+    private Executor executor;
 
     @RequestMapping("/test")
     public Mono<Object> testCallBack(
@@ -51,12 +55,17 @@ public class QcCallBackController {
         }
 
         ParentCallBackDto parentCallBackDto = JSONObject.parseObject(reqBody, ParentCallBackDto.class);
-
-        Object result = callbackApiConfig.execute(parentCallBackDto);
+        executor.execute(() -> {
+            try {
+                Object result = callbackApiConfig.execute(parentCallBackDto);
+            } catch ( Exception e ) {
+                log.error("执行回调接口失败", e);
+            }
+        });
 
         serverWebExchange.getResponse().getHeaders().add("X-Bot-Appid", botConfig.getAppId());
         serverWebExchange.getResponse().getHeaders().add("User-Agent", "QQBot-Callback");
 
-        return Mono.just(result);
+        return Mono.just("成功接收");
     }
 }

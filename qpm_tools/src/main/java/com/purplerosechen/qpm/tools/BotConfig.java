@@ -30,4 +30,6 @@ public class BotConfig {
     private String sxUrl;
     @Value("${bot.zs-url}")
     private String zssUrl;
+    @Value("${bot.gd-key}")
+    private String gdKey;
 }

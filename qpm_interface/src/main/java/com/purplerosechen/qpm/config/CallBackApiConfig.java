@@ -1,11 +1,11 @@
 package com.purplerosechen.qpm.config;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.purplerosechen.qpm.dto.AllCallBackDto;
-import com.purplerosechen.qpm.dto.CallBackTestDto;
-import com.purplerosechen.qpm.dto.GroupAtMessageCreateDto;
-import com.purplerosechen.qpm.dto.ParentCallBackDto;
+import com.purplerosechen.qpm.dto.*;
 import com.purplerosechen.qpm.service.*;
+import com.purplerosechen.qpm.service.impl.AckCallBackServiceImpl;
+import com.purplerosechen.qpm.service.impl.GroupAtMessageCreateCallBackServiceImpl;
+import com.purplerosechen.qpm.service.impl.TestCallBackServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
