@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
@@ -44,6 +45,16 @@ public class BotSendHttp {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(String.class)
+                .onErrorResume(e -> {
+                    if (e instanceof WebClientResponseException ex) {
+                        String responseBody = ex.getResponseBodyAsString();
+                        int statusCode = ex.getStatusCode().value();
+                        log.warn("Error Status: {}", statusCode);
+                        log.warn("Error Response: {}", responseBody);
+                        return Mono.just("请求失败: " + responseBody);
+                    }
+                    return Mono.error(e);
+                })
                 ;
     }
 
@@ -58,24 +69,15 @@ public class BotSendHttp {
                 .retrieve()
                 .bodyToMono(String.class)
                 ;
-        AtomicBoolean success = new AtomicBoolean(false);
-        res.subscribe(
-                s -> {
-                    log.info("获取accessToken成功:{}", s);
-
-                },
-                e -> {
-                    log.error("获取accessToken失败:{}", e.getMessage());
-                }
-        );
 
         JSONObject jsonObject = JSONObject.parseObject(res.block());
         if (jsonObject != null && jsonObject.getString("access_token") != null && jsonObject.getLong("expires_in") != null) {
             accessToken = jsonObject.getString("access_token");
             expireTime = (jsonObject.getLong("expires_in") * 1000) + System.currentTimeMillis();
-            success.set(true);
+            log.debug("accessToken:{},expireTime:{}", accessToken, expireTime);
+            return true;
         }
-        return success.get();
+        return false;
     }
 
     private boolean updateAccessToken() throws Exception {

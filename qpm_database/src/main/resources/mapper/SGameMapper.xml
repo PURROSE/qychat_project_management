@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.purplerosechen.qpm.database.mapper.SGameMapper">
+
+    <resultMap id="BaseResultMap" type="com.purplerosechen.qpm.database.model.SGame">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="gName" column="g_name" jdbcType="VARCHAR"/>
+            <result property="gNameY" column="g_name_y" jdbcType="VARCHAR"/>
+            <result property="gNote" column="g_note" jdbcType="VARCHAR"/>
+            <result property="gCreateTime" column="g_create_time" jdbcType="TIMESTAMP"/>
+            <result property="gEnable" column="g_enable" jdbcType="INTEGER"/>
+            <result property="gUrl" column="g_url" jdbcType="VARCHAR"/>
+            <result property="gBb" column="g_bb" jdbcType="VARCHAR"/>
+            <result property="gPwd" column="g_pwd" jdbcType="VARCHAR"/>
+            <result property="gOther" column="g_other" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,g_name,g_name_y,
+        g_note,g_create_time,g_enable,
+        g_url,g_bb,g_pwd,
+        g_other
+    </sql>
+</mapper>

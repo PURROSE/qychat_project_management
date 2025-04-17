@@ -12,6 +12,17 @@ spring:
     url: jdbc:postgresql://www.purplerosechen.com:54329/qpm
     username: qpm
     password: MAC0385macCwj
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 18000
+      max-lifetime: 30000
+      minimum-idle: 2
+      maximum-pool-size: 10
+      validation-timeout: 30000
+      connection-test-query: SELECT 1 FROM s_game limit 1
+      pool-name: qpm
+      auto-commit: true
+
   profiles:
     active: dev
 logging:

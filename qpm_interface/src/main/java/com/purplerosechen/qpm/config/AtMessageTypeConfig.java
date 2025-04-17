@@ -2,9 +2,10 @@ package com.purplerosechen.qpm.config;
 
 import com.purplerosechen.qpm.service.GroupAtMessageTypeService;
 import com.purplerosechen.qpm.service.exception.NotFoundAtMessageTypeException;
+import com.purplerosechen.qpm.service.impl.GroupAtMessageGameServiceImpl;
 import com.purplerosechen.qpm.service.impl.GroupAtMessageWeatherServiceImpl;
+import com.purplerosechen.qpm.service.impl.cw.CwBaseInfoServiceImpl;
 import jakarta.annotation.Resource;
-import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 /**
  * @author chen
  * @version 1.0
- * @description: TODO
+ * @description: TODO 对于群@
  * @date 16 4月 2025 11:55
  */
 
@@ -27,14 +28,14 @@ public class AtMessageTypeConfig {
 
     private final HashMap<String, AtMessageEnum> atMessageEnumHashMap;
 
-    public Object execute(String type, Object obj) throws Exception {
+    public Object execute(String type, Object obj,String groupOpenId,String userOpenId) throws Exception {
         AtMessageEnum atMessageEnum = atMessageEnumHashMap.get(type);
         if (atMessageEnum == null) {
             throw new NotFoundAtMessageTypeException();
         }
 
         GroupAtMessageTypeService groupAtMessageTypeService = (GroupAtMessageTypeService) applicationContext.getBean(atMessageEnum.getExecClass());
-        return groupAtMessageTypeService.execute(obj);
+        return groupAtMessageTypeService.execute(groupOpenId, userOpenId,obj);
     }
 
     public AtMessageTypeConfig() {
@@ -48,6 +49,8 @@ public class AtMessageTypeConfig {
     public enum AtMessageEnum{
 
         WEATHER("/天气", GroupAtMessageWeatherServiceImpl.class),
+        GAME("/游戏", GroupAtMessageGameServiceImpl.class),
+        CW_BASE_INFO("/宠物信息", CwBaseInfoServiceImpl.class),
 
         ;
 

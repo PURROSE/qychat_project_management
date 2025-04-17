@@ -9,7 +9,6 @@ import com.purplerosechen.qpm.service.gd.GdApiService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 /**
@@ -28,7 +27,7 @@ public class GroupAtMessageWeatherServiceImpl implements GroupAtMessageTypeServi
     private SCityMapper scoreMapper;
 
     @Override
-    public Object execute(Object obj) throws Exception {
+    public Object execute(String groupOpenid, String userOpenId, Object obj) throws Exception {
         // 根据传入的城市名称查询数据库表，获取到对应的城市代码
         obj = ((String) obj).replaceAll("[\n\r]","");
 

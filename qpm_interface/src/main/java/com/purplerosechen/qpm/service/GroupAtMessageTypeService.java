@@ -9,5 +9,5 @@ import com.purplerosechen.qpm.dto.AllCallBackDto;
  **/
 
 public interface GroupAtMessageTypeService {
-    Object execute(Object obj) throws Exception;
+    Object execute(String groupOpenId,String userOpenId, Object obj) throws Exception;
 }

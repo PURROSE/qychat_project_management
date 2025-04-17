@@ -4,11 +4,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.purplerosechen.qpm.config.AtMessageTypeConfig;
 import com.purplerosechen.qpm.dto.AllCallBackDto;
 import com.purplerosechen.qpm.dto.GroupAtMessageCreateDto;
-import com.purplerosechen.qpm.pojo.gd.GdLifeResPojo;
 import com.purplerosechen.qpm.pojo.qq.GroupMessageReqPojo;
 import com.purplerosechen.qpm.service.DispatchCallBackTypeService;
 import com.purplerosechen.qpm.service.exception.NotFoundAtMessageTypeException;
-import com.purplerosechen.qpm.service.exception.NotFoundCityException;
 import com.purplerosechen.qpm.tools.http.ApiHttpUrlEnum;
 import com.purplerosechen.qpm.tools.http.BotSendHttp;
 import jakarta.annotation.Resource;
@@ -40,14 +38,16 @@ public class GroupAtMessageCreateCallBackServiceImpl implements DispatchCallBack
         GroupAtMessageCreateDto groupAtMessageCreateDto = (GroupAtMessageCreateDto) request;
 
         log.info("群聊里面@机器人:{}", groupAtMessageCreateDto);
-        String[] content = groupAtMessageCreateDto.getContent().split(" ");
-        if (content.length<3) {
+        String type = groupAtMessageCreateDto.getContent().substring(1, groupAtMessageCreateDto.getContent().indexOf(" ",1));
+        String content = groupAtMessageCreateDto.getContent().substring(groupAtMessageCreateDto.getContent().indexOf(" ",1)+1);
+
+        if (type.length()<3) {
             sendGroupMessage(groupAtMessageCreateDto.getId(), groupAtMessageCreateDto.getGroupOpenid(), "请输入正确的指令");
             return new JSONObject();
         }
         try{
-            log.info("群聊里面@机器人:{},{}", content[1], content[2]);
-            Object resMsg  = atMessageTypeConfig.execute(content[1], content[2]);
+            log.info("群聊里面@机器人:{},{}", type, content);
+            Object resMsg  = atMessageTypeConfig.execute(type, content, groupAtMessageCreateDto.getGroupOpenid(), groupAtMessageCreateDto.getAuthor().getMemberOpenid());
             if (resMsg instanceof String) {
                 sendGroupMessage(groupAtMessageCreateDto.getId(), groupAtMessageCreateDto.getGroupOpenid(), (String) resMsg);
             }
@@ -80,6 +80,7 @@ public class GroupAtMessageCreateCallBackServiceImpl implements DispatchCallBack
                         log.info("发送群聊消息成功:{}", s);
                     },
                     e -> {
+
                         log.error("发送群聊消息失败", e);
                     }
             );
