@@ -31,25 +31,25 @@ public class SCw implements Serializable {
      * 
      */
     @TableField(value = "gj")
-    private Integer gj;
+    private Long gj;
 
     /**
      * 
      */
     @TableField(value = "fy")
-    private Integer fy;
+    private Long fy;
 
     /**
      * 
      */
     @TableField(value = "xl")
-    private Integer xl;
+    private Long xl;
 
     /**
      * 
      */
     @TableField(value = "jy")
-    private Integer jy;
+    private Long jy;
 
     /**
      * 
@@ -97,7 +97,7 @@ public class SCw implements Serializable {
      * 
      */
     @TableField(value = "jq")
-    private Integer jq;
+    private Long jq;
 
     /**
      * 

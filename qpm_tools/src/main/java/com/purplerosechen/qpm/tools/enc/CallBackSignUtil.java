@@ -1,23 +1,13 @@
 package com.purplerosechen.qpm.tools.enc;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator;
-import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters;
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.encoders.Hex;
-
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
 import java.util.Arrays;
-import java.util.Random;
 
 /**
  * @author chen
@@ -67,6 +57,7 @@ public class CallBackSignUtil {
      * @date: 15 4月 2025 13:50
      */
     public static String generateResponse(String botSecret, String eventTs, String plainToken) throws Exception {
+
         byte[] seed = expandSeed(botSecret.getBytes(StandardCharsets.UTF_8));
         Ed25519PrivateKeyParameters privateKey = new Ed25519PrivateKeyParameters(seed, 0);
 
@@ -90,6 +81,9 @@ public class CallBackSignUtil {
      * @date: 15 4月 2025 13:49
      */ 
     private static String bytesToHex(byte[] bytes) {
+        if (bytes == null) {
+            throw new IllegalArgumentException("bytes cannot be null");
+        }
         StringBuilder result = new StringBuilder();
         for (byte b : bytes) {
             result.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
@@ -103,6 +97,9 @@ public class CallBackSignUtil {
      * @date: 15 4月 2025 13:50
      */
     private static byte[] expandSeed(byte[] input) {
+        if (input == null) {
+            throw new IllegalArgumentException("Input cannot be null");
+        }
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         while (output.size() < ED25519_SEED_SIZE) {
             output.writeBytes(input);
@@ -110,6 +107,11 @@ public class CallBackSignUtil {
         return Arrays.copyOf(output.toByteArray(), ED25519_SEED_SIZE);
     }
 
+    /** 
+     * @description: TODO 哈希16字符串转字节
+     * @author chen
+     * @date: 18 4月 2025 11:04
+     */ 
     private static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         if ((len & 1) != 0) {
