@@ -6,12 +6,13 @@ import com.purplerosechen.qpm.database.model.SCwTask;
 import com.purplerosechen.qpm.database.service.SCwService;
 import com.purplerosechen.qpm.database.service.SCwTaskService;
 import jakarta.annotation.Resource;
-import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -107,23 +108,30 @@ public class CwServiceImpl {
 
     public String cwWork(SCw scw, CwWorkType cwWorkType, Long workTime) {
 
+        // 首先要判断当前时间有没有任务在执行
+        List<SCwTask> sCwTaskList = sCwTaskService.list(new QueryWrapper<SCwTask>().eq("cw_id", scw.getCwId()).gt("end_time", new Date()));
+
+        if (!sCwTaskList.isEmpty()) {
+            return "你正在" + Objects.requireNonNull(CwWorkType.getCwWorkType(sCwTaskList.getFirst().getTaskType())).getName() + "中，预计"+ sCwTaskList.getFirst().getEndTime() + "结束，请稍后再试";
+        }
         SCwTask swTask = new SCwTask();
         swTask.setCwId(scw.getCwId());
         swTask.setTaskType(cwWorkType.getType());
         swTask.setStartTime(new Date());
         // 开始时间增加workTime的小时时间
         swTask.setEndTime(new Date(swTask.getStartTime().getTime() + workTime * 3600 * 1000));
+        sCwTaskService.save(swTask);
 
         // 第二个参数系数为保留系数
         Long my = cwWorkType.work(scw,workTime);
         if (addJq(scw,my)) {
             if (my > 0 ) {
-                return "你成功" + cwWorkType.getName() + "了" + my + "金钱";
+                return scw.getCwName() + cwWorkType.getName() + "成功，收入" + my + "金钱，钱包余额："+scw.getJq();
             } else {
-                return "你失败" + cwWorkType.getName() + "了" + Math.abs(my) + "金钱";
+                return scw.getCwName() + cwWorkType.getName() + "失败了，赔钱" + Math.abs(my) + "金钱，钱包余额："+scw.getJq();
             }
         }
-        return "你失败" + cwWorkType.getName() + "了";
+        return "你" + cwWorkType.getName() + "失败了";
     }
 
     @Getter
@@ -135,11 +143,11 @@ public class CwServiceImpl {
          * 4、卖屁股
          * 5、种地
          */
-        CHAO_GUO(1,"炒股",(e,v)->{return stockTrading(e.getJq(), v);}),
-        DANG_GONG(2,"打工",(e,v)->{return 1L;}),
-        SHI_HUANG(3,"拾荒",(e,v)->{return 1L;}),
-        MAI_PAI_DI(4,"卖屁股",(e,v)->{return 1L;}),
-        ZHONG_DI(5,"种地",(e,v)->{return 1L;});
+        CHAO_GUO(1,"炒股", CwWorkType :: stockTrading),
+        DANG_GONG(2,"打工", CwWorkType :: workForOther),
+        SHI_HUANG(3,"拾荒", CwWorkType :: workForSh),
+        MAI_PAI_DI(4,"卖屁股",CwWorkType :: safAs),
+        ZHONG_DI(5,"种地",CwWorkType :: workForTd);
 
         private final Integer type;
         private final String name;
@@ -151,6 +159,24 @@ public class CwServiceImpl {
             this.func = func;
         }
 
+        public static CwWorkType getCwWorkType(Integer type) {
+            for (CwWorkType cwWorkType : CwWorkType.values()) {
+                if (cwWorkType.getType().equals(type)) {
+                    return cwWorkType;
+                }
+            }
+            return null;
+        }
+
+        public static CwWorkType getCwWorkType(String name) {
+            for (CwWorkType cwWorkType : CwWorkType.values()) {
+                if (cwWorkType.getName().equals(name)) {
+                    return cwWorkType;
+                }
+            }
+            return null;
+        }
+
         public Long work(SCw scw,Long workTime) {
             return func.apply(scw,workTime);
         }
@@ -160,9 +186,11 @@ public class CwServiceImpl {
          * @author chen
          * @date: 18 4月 2025 16:05
          */
-        private static long stockTrading(Long je, Long time) {
+        private static long stockTrading(SCw scw, Long time) {
             // 生成随机数
+            // 这里入参的是本金,只能使用本金的32%用于炒股
             long jq = 0L;
+            long je = (long) (scw.getJq() * 0.32);
             for ( int i = 0; i < time; i++ ) {
                 long random = (long) (Math.random() * 100);
                 if (random < 50) {
@@ -176,6 +204,75 @@ public class CwServiceImpl {
             return jq;
         }
 
+        /** 
+         * @description: TODO 打工收入 
+         * @author 10605
+         * @date: 18 4月 2025 23:54
+         */ 
+        private static long workForOther(SCw scw, Long time) {
+            // 打工是稳定的收入，收入和等级挂钩
+
+            long jq = 0L;
+            long random = 0;
+            for ( int i = 0; i < time; i++ ) {
+                random = (long) (Math.random() * 100);
+                jq += (random * scw.getDj());
+            }
+
+            return jq;
+        }
+
+        /**
+         * @description: TODO 拾荒收入
+         * @author 10605
+         * @date: 18 4月 2025 23:59
+         */
+        private static long workForSh(SCw scw, Long time) {
+            // 拾荒是收益最低的类型，但是时间加成高，时间加成*10倍
+            long jq = 0L;
+            time = time * 2;
+            long random = 0;
+            for ( int i = 0; i < time; i++ ) {
+                random = (long) (Math.random() * 10);
+                jq += random;
+            }
+            return jq;
+        }
+
+        /**
+         * @description: TODO 卖屁股
+         * @author 10605
+         * @date: 19 4月 2025 00:16
+         */
+        private static long safAs(SCw scw, Long time) {
+            // 根据等级卖屁股
+            // 卖屁股需要查找可以购买的宠物，这里的time就不是时间了，而是购买者的钱
+            long jq = 0L;
+            long random = (long) (Math.random() * 200);
+            jq = random * scw.getDj();
+            // 如果支付的钱不够，就只能把time的钱全部给出去。
+            if (jq >= time) {
+                jq = time;
+            }
+            return jq;
+        }
+
+        /**
+         * @description: TODO 种地
+         * @author 10605
+         * @date: 19 4月 2025 00:16
+         */
+        private static long workForTd(SCw scw, Long time) {
+            // 种地是一种比拾荒高，但是时间投入成本高的收入
+            long jq = 0L;
+            time = (long) (time * 0.2);
+            long random = 0;
+            for ( int i = 0; i < time; i++ ) {
+                random = (long) (Math.random() * 100);
+                jq += random;
+            }
+            return jq;
+        }
 
     }
 }

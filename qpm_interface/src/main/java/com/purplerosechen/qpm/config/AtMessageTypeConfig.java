@@ -5,6 +5,7 @@ import com.purplerosechen.qpm.service.exception.NotFoundAtMessageTypeException;
 import com.purplerosechen.qpm.service.impl.GroupAtMessageGameServiceImpl;
 import com.purplerosechen.qpm.service.impl.GroupAtMessageWeatherServiceImpl;
 import com.purplerosechen.qpm.service.impl.cw.CwBaseInfoServiceImpl;
+import com.purplerosechen.qpm.service.impl.cw.CwWorkServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +52,7 @@ public class AtMessageTypeConfig {
         WEATHER("/天气", GroupAtMessageWeatherServiceImpl.class),
         GAME("/游戏", GroupAtMessageGameServiceImpl.class),
         CW_BASE_INFO("/宠物信息", CwBaseInfoServiceImpl.class),
-
+        WORK("/工作", CwWorkServiceImpl.class)
         ;
 
         private final String type;
