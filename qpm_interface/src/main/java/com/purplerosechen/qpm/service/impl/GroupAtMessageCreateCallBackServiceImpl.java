@@ -6,6 +6,7 @@ import com.purplerosechen.qpm.dto.AllCallBackDto;
 import com.purplerosechen.qpm.dto.GroupAtMessageCreateDto;
 import com.purplerosechen.qpm.pojo.qq.GroupMessageReqPojo;
 import com.purplerosechen.qpm.service.DispatchCallBackTypeService;
+import com.purplerosechen.qpm.service.GroupAtMessageTypeService;
 import com.purplerosechen.qpm.service.exception.NotFoundAtMessageTypeException;
 import com.purplerosechen.qpm.tools.http.ApiHttpUrlEnum;
 import com.purplerosechen.qpm.tools.http.BotSendHttp;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 /**
  * @author chen
@@ -31,7 +33,8 @@ public class GroupAtMessageCreateCallBackServiceImpl implements DispatchCallBack
 
     @Resource
     private AtMessageTypeConfig atMessageTypeConfig;
-
+    @Resource
+    private Executor executor;
 
     @Override
     public Object execute(AllCallBackDto request) {
@@ -47,9 +50,16 @@ public class GroupAtMessageCreateCallBackServiceImpl implements DispatchCallBack
         }
         try{
             log.info("群聊里面@机器人:{},{}", type, content);
-            Object resMsg  = atMessageTypeConfig.execute(type, content, groupAtMessageCreateDto.getGroupOpenid(), groupAtMessageCreateDto.getAuthor().getMemberOpenid());
-            if (resMsg instanceof String) {
-                sendGroupMessage(groupAtMessageCreateDto.getId(), groupAtMessageCreateDto.getGroupOpenid(), (String) resMsg);
+            if (atMessageTypeConfig.isAsync(type)) {
+                executor.execute(() -> {
+                    try {
+                        messageReceived(type, content, groupAtMessageCreateDto);
+                    } catch (Exception e) {
+                        log.error("群聊里面@机器人:{}", e);
+                    }
+                });
+            } else {
+                messageReceived(type, content, groupAtMessageCreateDto);
             }
         }catch ( NotFoundAtMessageTypeException exception ) {
             sendGroupMessage(groupAtMessageCreateDto.getId(), groupAtMessageCreateDto.getGroupOpenid(), "暂不支持该功能");
@@ -61,31 +71,39 @@ public class GroupAtMessageCreateCallBackServiceImpl implements DispatchCallBack
         return new JSONObject();
     }
 
+    private void messageReceived(String type, String content, GroupAtMessageCreateDto groupAtMessageCreateDto) throws Exception {
+        Object resMsg = atMessageTypeConfig.execute(type, content, groupAtMessageCreateDto.getGroupOpenid(), groupAtMessageCreateDto.getAuthor().getMemberOpenid());
+        if (resMsg instanceof String) {
+            sendGroupMessage(groupAtMessageCreateDto.getId(), groupAtMessageCreateDto.getGroupOpenid(), (String) resMsg);
+        }
+    }
+
     /**
      * @description: TODO 发送群消息
      * @author chen
      * @date: 16 4月 2025 11:06
      */
     private void sendGroupMessage(String groupMsgId,String groupId, String message) {
-        GroupMessageReqPojo groupMessageReqPojo = new GroupMessageReqPojo();
-        groupMessageReqPojo.setContent(message);
-        groupMessageReqPojo.setMsgType(0);
-        groupMessageReqPojo.setMsgId(groupMsgId);
-        groupMessageReqPojo.setMsgSeq("1");
+        executor.execute(() -> {
+            GroupMessageReqPojo groupMessageReqPojo = new GroupMessageReqPojo();
+            groupMessageReqPojo.setContent(message);
+            groupMessageReqPojo.setMsgType(0);
+            groupMessageReqPojo.setMsgId(groupMsgId);
+            groupMessageReqPojo.setMsgSeq("1");
 
-        try {
-            Mono<String> res = botSendHttp.post(groupMessageReqPojo, String.format(ApiHttpUrlEnum.GROUP_AT_MESSAGE_CREATE_CALL_BACK.getUrl(), groupId));
-            res.subscribe(
-                    s -> {
-                        log.info("发送群聊消息成功:{}", s);
-                    },
-                    e -> {
-
-                        log.error("发送群聊消息失败", e);
-                    }
-            );
-        } catch (Exception e) {
-            log.error("发送群聊消息失败", e);
-        }
+            try {
+                Mono<String> res = botSendHttp.post(groupMessageReqPojo, String.format(ApiHttpUrlEnum.GROUP_AT_MESSAGE_CREATE_CALL_BACK.getUrl(), groupId));
+                res.subscribe(
+                        s -> {
+                            log.info("发送群聊消息成功:{}", s);
+                        },
+                        e -> {
+                            log.error("发送群聊消息失败", e);
+                        }
+                );
+            } catch (Exception e) {
+                log.error("发送群聊消息失败", e);
+            }
+        });
     }
 }

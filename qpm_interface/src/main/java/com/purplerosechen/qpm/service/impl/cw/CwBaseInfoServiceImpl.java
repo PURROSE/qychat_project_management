@@ -45,7 +45,7 @@ public class CwBaseInfoServiceImpl implements GroupAtMessageTypeService {
         // 这里拼接宠物信息，返回
         String cwMsg = "您的宠物【" + scw.getCwName() + "】\n" +
                 "等级:" + scw.getDj() + "\n" +
-                "经验:" + scw.getJy() + "/" + String.valueOf(cwService.getNextLevelJy(scw.getDj())) + "\n" +
+                "经验:" + scw.getJy() + "/" + cwService.getNextLevelJy(scw.getDj()) + "\n" +
                 "金钱:" + scw.getJq() + "\n" +
                 "攻击:" + scw.getGj() + ";防御:" + scw.getFy() + ";血量:" + scw.getXl();
         return cwMsg;

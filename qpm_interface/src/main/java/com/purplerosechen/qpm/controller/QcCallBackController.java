@@ -32,8 +32,7 @@ public class QcCallBackController {
     private BotConfig botConfig;
     @Resource
     private CallBackApiConfig callbackApiConfig;
-    @Resource
-    private Executor executor;
+
 
     @RequestMapping("/test")
     public Mono<Object> testCallBack(
@@ -44,7 +43,7 @@ public class QcCallBackController {
             ) throws Exception {
 
         log.info("xSignatureEd25519:{};xSignatureTimestamp:{};reqBody:{}", xSignatureEd25519, xSignatureTimestamp, reqBody);
-
+        Long startTime = System.currentTimeMillis();
         if (!CallBackSignUtil.verifySignature(
                 botConfig.getAppSecret(),
                 xSignatureEd25519,
@@ -55,17 +54,12 @@ public class QcCallBackController {
         }
 
         ParentCallBackDto parentCallBackDto = JSONObject.parseObject(reqBody, ParentCallBackDto.class);
-        executor.execute(() -> {
-            try {
-                Object result = callbackApiConfig.execute(parentCallBackDto);
-            } catch ( Exception e ) {
-                log.error("执行回调接口失败", e);
-            }
-        });
+        Object result = callbackApiConfig.execute(parentCallBackDto);
 
         serverWebExchange.getResponse().getHeaders().add("X-Bot-Appid", botConfig.getAppId());
         serverWebExchange.getResponse().getHeaders().add("User-Agent", "QQBot-Callback");
-
-        return Mono.just("成功接收");
+        Long endTime = System.currentTimeMillis();
+        log.info("callback time:{}", endTime - startTime);
+        return Mono.just(result);
     }
 }

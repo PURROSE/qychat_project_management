@@ -28,7 +28,7 @@ public class CwWorkServiceImpl implements GroupAtMessageTypeService {
             String body = (String) obj;
             String[] split = body.split(" ");
             if (split.length != 2) {
-                throw new Exception("参数错误！");
+                throw new Exception("参数错误！请使用/工作 {工作类型：打工，炒股，拾荒，卖屁股，种地} {小时数}为格式发送！");
             }
             String time = split[1];
             String type = split[0];
@@ -41,10 +41,8 @@ public class CwWorkServiceImpl implements GroupAtMessageTypeService {
             }
             long workTime = Long.parseUnsignedLong(time);
             return cwService.cwWork(scw, cwWorkType, workTime);
-        } catch ( NumberFormatException exception ) {
-            return "时间转换失败！"+exception.getMessage();
         } catch ( Exception exception ) {
-            return "参数错误！";
+            return "参数错误！请使用/工作 {工作类型：打工，炒股，拾荒，卖屁股，种地} {小时数}为格式发送！";
         }
     }
 }

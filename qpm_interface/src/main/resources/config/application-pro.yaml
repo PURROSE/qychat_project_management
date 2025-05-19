@@ -1,0 +1,36 @@
+server:
+  port: 8444
+  ssl:
+    enabled: true
+    key-store: classpath:config/keystore.p12
+    key-store-password: 1234560
+    keyStoreType: PKCS12
+    keyAlias: qpm
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://www.purplerosechen.com:54329/qpm
+    username: qpm
+    password: MAC0385macCwj
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 18000
+      max-lifetime: 30000
+      minimum-idle: 2
+      maximum-pool-size: 10
+      validation-timeout: 30000
+      connection-test-query: SELECT 1 FROM s_game limit 1
+      pool-name: qpm
+      auto-commit: true
+logging:
+  level:
+    org.springframework.web.reactive.function.client: DEBUG
+    com.purplerosechen.qpm: DEBUG
+bot:
+  app-id: 102620972
+  number: 3889528922
+  token: Cm1A88f1OPEmwB7HBfMbbHmUpeCCTCsL
+  secret: fs5JXlzDRfu9Ods7Mbr7Ndt9PgxEVm3K
+  sx-url: https://sandbox.api.sgroup.qq.com
+  zs-url: https://api.sgroup.qq.com/
+  gd-key: b3ae989707c1a1ad037bf26360ef1dfc

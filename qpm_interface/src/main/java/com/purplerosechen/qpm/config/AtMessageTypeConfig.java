@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.concurrent.Executor;
 
 /**
  * @author chen
@@ -26,6 +27,7 @@ import java.util.HashMap;
 public class AtMessageTypeConfig {
     @Resource
     private ApplicationContext applicationContext;
+
 
     private final HashMap<String, AtMessageEnum> atMessageEnumHashMap;
 
@@ -46,21 +48,32 @@ public class AtMessageTypeConfig {
         }
     }
 
+    /**
+     * @description: TODO 返回消息类型是否异步的状态
+     * @author chen
+     * @date: 19 5月 2025 15:56
+     */
+    public boolean isAsync(String type) {
+        return atMessageEnumHashMap.get(type).isAsync();
+    }
+
     @Getter
     public enum AtMessageEnum{
 
-        WEATHER("/天气", GroupAtMessageWeatherServiceImpl.class),
-        GAME("/游戏", GroupAtMessageGameServiceImpl.class),
-        CW_BASE_INFO("/宠物信息", CwBaseInfoServiceImpl.class),
-        WORK("/工作", CwWorkServiceImpl.class)
+        WEATHER("/天气", GroupAtMessageWeatherServiceImpl.class, true),
+        GAME("/游戏", GroupAtMessageGameServiceImpl.class, true),
+        CW_BASE_INFO("/宠物信息", CwBaseInfoServiceImpl.class, false),
+        WORK("/工作", CwWorkServiceImpl.class, false)
         ;
 
         private final String type;
         private final Class<?> execClass;
+        private final boolean isAsync;
 
-        AtMessageEnum(String type, Class<?> execClass) {
+        AtMessageEnum(String type, Class<?> execClass, boolean isAsync) {
             this.type = type;
             this.execClass = execClass;
+            this.isAsync = isAsync;
         }
     }
 

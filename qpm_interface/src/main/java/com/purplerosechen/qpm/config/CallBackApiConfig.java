@@ -71,7 +71,7 @@ public class CallBackApiConfig {
 
         TEST("回调地址验证",13, TestCallBackServiceImpl.class, "开放平台对机器人服务端进行验证", CallBackTestDto.class),
         ACK("HTTP Callback ACK",  12, AckCallBackServiceImpl.class, "仅用于 http 回调模式的回包，代表机器人收到了平台推送的数据", JSONObject.class),
-        Dispatch("Dispatch",0, DispatchCallBackTypeService.class, "服务端进行消息推送", JSONObject.class ),
+        Dispatch("Dispatch",0, DispatchCallBackTypeService.class, "服务端进行消息推送", JSONObject.class),
 
         ;
 
@@ -80,6 +80,7 @@ public class CallBackApiConfig {
         private final Class<?> callBackService;
         private final Class<?> requestClass;
         private final String note;
+
 
         CallBackApiModule(String name, Integer code, Class<?> callBackService, String note, Class<?> requestClass) {
             this.code = code;

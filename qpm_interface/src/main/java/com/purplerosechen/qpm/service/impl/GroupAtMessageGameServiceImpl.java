@@ -42,7 +42,7 @@ public class GroupAtMessageGameServiceImpl implements GroupAtMessageTypeService 
             stringBuilder.append("游戏密码：").append(sGame.getGPwd()).append("\t");
             stringBuilder.append("其他地址：").append(sGame.getGOther().replaceAll("\\.",","));
             if (maxLine <= 0) {
-                stringBuilder.append("\n...省略部分游戏");
+                stringBuilder.append("\n...请输入更精确名称以便提供更准确结果");
                 break;
             }
         }

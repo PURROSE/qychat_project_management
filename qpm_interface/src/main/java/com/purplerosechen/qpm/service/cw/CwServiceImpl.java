@@ -159,6 +159,11 @@ public class CwServiceImpl {
             this.func = func;
         }
 
+        /** 
+         * @description: TODO 根据ID号返回宠物工作枚举
+         * @author chen
+         * @date: 15 5月 2025 11:40
+         */ 
         public static CwWorkType getCwWorkType(Integer type) {
             for (CwWorkType cwWorkType : CwWorkType.values()) {
                 if (cwWorkType.getType().equals(type)) {
@@ -168,6 +173,11 @@ public class CwServiceImpl {
             return null;
         }
 
+        /** 
+         * @description: TODO 根据名称返回宠物工作类型的枚举 
+         * @author chen
+         * @date: 15 5月 2025 09:45
+         */ 
         public static CwWorkType getCwWorkType(String name) {
             for (CwWorkType cwWorkType : CwWorkType.values()) {
                 if (cwWorkType.getName().equals(name)) {
